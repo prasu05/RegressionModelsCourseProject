@@ -1,0 +1,67 @@
+---
+title: "Motor Trend"
+author: "Sushant Pradhan"
+date: "22 June 2014"
+output: html_document
+---
+### Executive Summary
+This report analyses cars data collected on 10 aspects of automobile design and performance for 32 automobiles (1973-74 modles) so as to find a relationship between the collected aspects of automobile design and find answers to below questions:
+
+* Is an automatic or manual transmission better for MPG?
+* Quantifying how different is the MPG between automatic and manual transmissions?
+
+From our analysis described below we found that **manual transmission** is better from MPG with an average increase of ***2.78*** MPG value for manula transimission cars
+
+### Analysis Report
+
+The below graph shows density plots for all features (except 'vs'). The red line is for 'manual transmission' and 'blue line 
+' is for auto transmission.
+```{r echo=FALSE, cache=TRUE}
+    library(caret)
+    ndata <- mtcars
+    ndata[,-c(8,9)] <- scale(mtcars[,-c(8,9)])
+    ndata[,8] <- as.factor(mtcars[,8])
+    ndata[,9] <- as.factor(mtcars[,9])
+    y <- as.factor(mtcars$am)
+    featurePlot(ndata[,-c(8,9)], y=y, plot='density')    
+```
+
+As can be seen from the distribution, average value of MPG for manual transmission cars is better than automatic cars. And also most manual transmission cars have MPG value greater than average of auto tranmission cars.
+
+### Model
+To quantify the difference of MPG between automatic and manual transmissions considering all other varibales (cyl, disp, hp etc), we regress MPG against other variables.
+
+```{r echo=FALSE}
+    plot(mtcars)
+```
+
+From the above scatter plot of regressors we can see that there exists a strong co-relation between 'wt' & 'disp' and 'cyl' and 'disp'. Hence one from each pair could be excluded from the model. Variance inflation factors for various models are shown below. As expected removal of the regressor 'wt' decreases ***vif*** of 'disp' significantly while removal of qsec decreases ***vif*** of 'cyl' significantly.
+
+```{r echo=FALSE}
+    a <- library(car)
+    data <- mtcars
+    data$am <- as.factor(data$am)
+    data$vs <- as.factor(data$vs)
+    md1 <- lm(mpg ~ . , data=data)
+    print(md1$call)
+    print(vif(md1))
+    md2 <- lm(mpg ~ . - wt , data=data)
+    print(md2$call)
+    print(vif(md2))
+    md3 <- lm(mpg ~ . - wt -qsec, data=data)
+    print(md3$call)
+    print(vif(md3))
+```
+
+```{r echo =FALSE}
+    plot(md3, which=1)
+```
+
+The resultant model is a good fit as can seen from the above residual plot as residuals are independent of fitted values. It can be inffered from the model coefficients (see below) that change in transmission mode (from auto to manual) results in an increase of ***2.7*** in MPG.
+
+```{r echo=FALSE}
+    print(md3$coef)
+    confint(md3)
+```
+
+The 95% confidence interval of 'am' regressor tells us that difference in MPG value between auto and manual transmission will fluctuate between -1.29 to 6.86 for 95% of the manufactured automobiles.
